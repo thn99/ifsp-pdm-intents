@@ -4,12 +4,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.intent.databinding.ActivityMainBinding;
 
@@ -84,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 outraActivityIntent.putExtra(PARAMETRO, activityMainBinding.parametroEt.getText().toString());
 
                 startActivityForResult(outraActivityIntent, OUTRA_ACTIVITY_REQUEST_CODE);
+                return true;
 
             case R.id.viewMi:
                 Intent abrirNavegadorIntent = new Intent(Intent.ACTION_VIEW);
@@ -91,8 +97,28 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(abrirNavegadorIntent);
 
                 return true;
+            case R.id.callMi:
+                verifyCallPermission();
+                return true;
         }
         return false;
+    }
+
+    private void verifyCallPermission() {
+        Intent ligarIntent = new Intent(Intent.ACTION_CALL);
+        ligarIntent.setData(Uri.parse("tel:" + activityMainBinding.parametroEt.getText().toString()));
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            if(checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED){
+                startActivity(ligarIntent);
+            } else {
+                // solicitar permissao
+                Toast.makeText(this, "Precisa de permissão", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            startActivity(ligarIntent);
+        }
+
     }
 
     @Override
