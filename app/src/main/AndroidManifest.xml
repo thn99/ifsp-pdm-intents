@@ -9,7 +9,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Intent">
-        <activity android:name=".OutraActivity"></activity>
+        <activity android:name=".OutraActivity">
+            <intent-filter>
+                <action android:name="RECEBER_E_RETORNAR_ACTION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
