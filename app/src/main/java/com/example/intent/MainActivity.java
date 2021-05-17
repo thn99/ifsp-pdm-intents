@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.util.Log;
 import android.view.Menu;
@@ -25,6 +26,10 @@ public class MainActivity extends AppCompatActivity {
     public static final String PARAMETRO = "PARAMETRO";
 
     private final int OUTRA_ACTIVITY_REQUEST_CODE = 0;
+
+    private final int CALL_PHONE_REQUEST_CODE = 1;
+
+    private final int PICK_IMAGEM_REQUEST_CODE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +105,18 @@ public class MainActivity extends AppCompatActivity {
             case R.id.callMi:
                 verifyCallPermission();
                 return true;
+            case R.id.dialMi:
+                Intent discarIntent = new Intent(Intent.ACTION_DIAL);
+                discarIntent.setData(Uri.parse("tel:" + activityMainBinding.parametroEt.getText().toString()));
+                startActivity(discarIntent);
+                return true;
+            case R.id.pickMi:
+                Intent pegarImagemIntent = new Intent(Intent.ACTION_PICK);
+                String diretorioImagens = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath();
+                pegarImagemIntent.setDataAndType(Uri.parse(diretorioImagens), "image/*");
+                startActivityForResult(pegarImagemIntent, PICK_IMAGEM_REQUEST_CODE);
+                return true;
+
         }
         return false;
     }
@@ -108,17 +125,29 @@ public class MainActivity extends AppCompatActivity {
         Intent ligarIntent = new Intent(Intent.ACTION_CALL);
         ligarIntent.setData(Uri.parse("tel:" + activityMainBinding.parametroEt.getText().toString()));
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             if(checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED){
                 startActivity(ligarIntent);
             } else {
                 // solicitar permissao
-                Toast.makeText(this, "Precisa de permissão", Toast.LENGTH_SHORT).show();
+                requestPermissions(new String[]{Manifest.permission.CALL_PHONE}, CALL_PHONE_REQUEST_CODE);
             }
         } else {
             startActivity(ligarIntent);
         }
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode == CALL_PHONE_REQUEST_CODE){
+            if (permissions[0].equals(Manifest.permission.CALL_PHONE)
+            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                verifyCallPermission();
+            }
+            Toast.makeText(this, "Preciso de permissão", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -130,6 +159,13 @@ public class MainActivity extends AppCompatActivity {
         if (OUTRA_ACTIVITY_REQUEST_CODE == requestCode && resultCode == RESULT_OK) {
             if (retorno != null){
                 activityMainBinding.retornoTv.setText(retorno);
+            }
+        } else {
+            if(requestCode == PICK_IMAGEM_REQUEST_CODE && resultCode == RESULT_OK){
+                Uri imagemUri = data.getData();
+
+                Intent visualizarImagem = new Intent(Intent.ACTION_VIEW, imagemUri);
+                startActivity(visualizarImagem);
             }
         }
 
